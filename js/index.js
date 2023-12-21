@@ -1,47 +1,79 @@
 const anim = document.querySelector('#anim');
+const start_reload_btn = document.querySelector('#start-reload-btn');
+let stopAnimation = false;
+const circle1 = document.querySelector('#circle1');
+const circle2 = document.querySelector('#circle2');
+let maxX;
+let maxY;
+let circle1X;
+let circle1Y;
+let circle2X;
+let circle2Y;
 
 function play(){
     const work = document.querySelector('#work');
     work.style.display = 'flex';
     work.style.width = (0.4 * window.innerWidth + 10).toString() + 'px';
     work.style.height = (0.8 * window.innerHeight + 50).toString() + 'px';
-
     anim.style.height = (0.8 * window.innerHeight).toString() + 'px';
+    start_reload_btn.innerHTML = 'Start';
+    start_reload_btn.disabled = false;
+
+    setCircles();
 }
 
-const start_reload_btn = document.querySelector('#start-reload-btn');
-
 function start_reload(){
-    start_reload_btn.innerHTML = (start_reload_btn.innerHTML === 'Start') ? 'Reload' : 'Start';
+    if (start_reload_btn.innerHTML === 'Start') {
+        start_reload_btn.disabled = true;
+        stopAnimation = false;
+        animateCircles();
+    }
+    else {
+        setCircles();
+        start_reload_btn.innerHTML = 'Start';
+    }
 
-    const circle1 = document.querySelector('#circle1');
-    const circle2 = document.querySelector('#circle2');
+}
 
+function close_work(){
+    stopAnimation = true;
+    document.querySelector('#circle1').style.display = 'none';
+    document.querySelector('#circle2').style.display = 'none';
+
+    const work = document.querySelector('#work');
+    work.style.display = 'none';
+}
+
+function setCircles(){
     circle1.style.display = 'block';
     circle2.style.display = 'block';
 
-    const animBorderWidth = 5;
-    const maxX = anim.clientWidth - circle1.clientWidth;
-    const maxY = anim.clientHeight - circle1.clientHeight;
+    maxX = anim.clientWidth - circle1.clientWidth;
+    maxY = anim.clientHeight - circle1.clientHeight;
 
-    let circle1X = Math.random()*maxX;
-    let circle1Y = 0;
-    let circle2X = Math.random()*maxX;
-    let circle2Y = maxY;
-    /*let circle1X = Math.random()*(anim.clientWidth-animBorderWidth)-circle1.style.width;
-    let circle1Y = 0;
-    let circle2X = Math.random()*(anim.clientWidth-circle2.style.width-animBorderWidth);
-    let circle2Y = anim.clientHeight-circle2.clientHeight;*/
+    circle1X = Math.random() * maxX;
+    circle1Y = 0;
+    circle2X = Math.random() * maxX;
+    circle2Y = maxY;
 
     circle1.style.transform = 'translate(' + circle1X + 'px,' + circle1Y + 'px)';
     circle2.style.transform = 'translate(' + circle2X + 'px,' + circle2Y + 'px)';
+}
 
-    let vel1X = Math.random() * 5;
-    let vel1Y = Math.random() * 5;
-    let vel2X = Math.random() * 5;
-    let vel2Y = Math.random() * 5;
+function animateCircles(){
+    const velocity = 5;
+    const angle1 = Math.random() * 180;
+    const angle2 = Math.random() * 180;
+    let vel1X = velocity * Math.cos(angle1);
+    let vel1Y = velocity * Math.sin(angle1);
+    let vel2X = velocity * Math.cos(angle2);
+    let vel2Y = velocity * Math.sin(angle2);
 
     function move_circles() {
+        if (stopAnimation) {
+            return;
+        }
+
         circle1X += vel1X;
         circle1Y += vel1Y;
         circle2X += vel2X;
@@ -60,18 +92,26 @@ function start_reload(){
             vel2Y = -vel2Y;
         }
 
+        if (Math.abs(circle1X - circle2X) < circle1.clientWidth &&
+            Math.abs(circle1Y - circle2Y) < circle1.clientHeight) {
+            vel1X = -vel1X;
+            vel1Y = -vel1Y;
+            vel2X = -vel2X;
+            vel2Y = -vel2Y;
+        }
+
+        if (((((circle1Y+circle1.clientHeight) < 0.5*anim.clientHeight) && ((circle2Y+circle2.clientHeight) < 0.5*anim.clientHeight))) ||
+            (((circle1Y > 0.5*anim.clientHeight) && (circle2Y > 0.5*anim.clientHeight)))) {
+            stopAnimation = true;
+            start_reload_btn.innerHTML = 'Reload';
+            start_reload_btn.disabled = false;
+        }
+
         circle1.style.transform = 'translate(' + circle1X + 'px,' + circle1Y + 'px)';
         circle2.style.transform = 'translate(' + circle2X + 'px,' + circle2Y + 'px)';
 
         requestAnimationFrame(move_circles);
     }
-}
 
-
-
-
-
-function close_work(){
-    const work = document.querySelector('#work');
-    work.style.display = 'none';
+    move_circles();
 }
