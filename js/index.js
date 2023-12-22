@@ -142,12 +142,22 @@ function logEvent(event){
 }
 
 function loadEventsFromServer(){
-    let eventsArray;
+    let eventsArray = [];
     const xhr = new XMLHttpRequest();
     xhr.onreadystatechange = function() {
         if (xhr.readyState === XMLHttpRequest.DONE) {
             if (xhr.status === 200) {
-                eventsArray = JSON.parse(xhr.responseText);
+                let strArr = xhr.responseText.trim().split('\n');
+
+                console.log(xhr.responseText);
+                console.log(strArr);
+
+                strArr.forEach(str => {
+                    const eventProperties = str.split(';');
+                    eventsArray.push({ n:eventProperties[0],
+                                       time:eventProperties[1],
+                                       event:eventProperties[2]});
+                });
                 console.log(eventsArray);
             } else {
                 console.error('Request failed with status: ' + xhr.status);
