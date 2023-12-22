@@ -21,6 +21,7 @@ function play(){
     start_reload_btn.innerHTML = 'Start';
     start_reload_btn.disabled = false;
     message_div.textContent = '';
+    document.querySelector('#table-container').innerHTML = '';
     setCircles();
 }
 
@@ -50,14 +51,39 @@ function close_work(){
     eventNum = 0;
     loadEventsFromServer().then(function(serverEvents) {
         const localStorageEvents = loadEventsFromLocalStorage();
+        localStorage.clear();
+        serverEvents.sort(function(a,b) {
+            return a.n - b.n;
+        });
+        localStorageEvents.sort(function(a,b) {
+            return a.n - b.n;
+        });
         const eventsNum = serverEvents.length;
-        const table = document.querySelector('#table');
+        const table = document.createElement('table');
+        table.setAttribute('id', 'table');
+        table.style.borderCollapse = 'collapse';
+        const headerRow = table.insertRow();
+        const serverTh = document.createElement('th');
+        serverTh.setAttribute('colspan', '3');
+        serverTh.textContent = 'Server';
+        headerRow.appendChild(serverTh);
+        const localStorageTh = document.createElement('th');
+        localStorageTh.setAttribute('colspan', '3');
+        localStorageTh.textContent = 'localStorage';
+        headerRow.appendChild(localStorageTh);
+        const headerRow2 = table.insertRow();
+        const headers = ['N', 'Time', 'Event'];
+        for (let i = 0; i < 2; i++) {
+            for (let j = 0; j < headers.length; j++) {
+                let cell = document.createElement('td');
+                cell.textContent = headers[j];
+                headerRow2.appendChild(cell);
+            }
+        }
         for (let i = 0; i < eventsNum; i++){
             const serverEvent = serverEvents.shift();
             const localStorageEvent = localStorageEvents.shift();
-
             const row = table.insertRow();
-
             let cell = row.insertCell();
             cell.textContent = serverEvent.n;
             cell = row.insertCell();
@@ -72,6 +98,7 @@ function close_work(){
             cell.textContent = localStorageEvent.event;
         }
         table.style.display = 'block';
+        document.querySelector('#table-container').appendChild(table);
     });
 }
 
