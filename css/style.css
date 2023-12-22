@@ -93,6 +93,10 @@ p, h2, h4{
     overflow: hidden;
 }
 
+.area-4 button {
+    margin:5px;
+}
+
 #work {
     display:none;
     position:fixed;
@@ -132,6 +136,21 @@ p, h2, h4{
     width:20px;
     height:20px;
     border-radius:50%;
+}
+
+#table-container {
+    max-height: 300px;
+    overflow-y:auto;
+}
+
+table{
+    display:none;
+}
+
+table, th, td {
+    border: 1px solid black;
+    border-collapse: collapse;
+    padding: 6px;
 }
 
 .blue{

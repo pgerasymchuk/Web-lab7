@@ -48,7 +48,31 @@ function close_work(){
 
     logEvent('Close button clicked');
     eventNum = 0;
-    loadEventsFromServer();
+    loadEventsFromServer().then(function(serverEvents) {
+        const localStorageEvents = loadEventsFromLocalStorage();
+        const eventsNum = serverEvents.length;
+        const table = document.querySelector('#table');
+        for (let i = 0; i < eventsNum; i++){
+            const serverEvent = serverEvents.shift();
+            const localStorageEvent = localStorageEvents.shift();
+
+            const row = table.insertRow();
+
+            let cell = row.insertCell();
+            cell.textContent = serverEvent.n;
+            cell = row.insertCell();
+            cell.textContent = serverEvent.time;
+            cell = row.insertCell();
+            cell.textContent = serverEvent.event;
+            cell = row.insertCell();
+            cell.textContent = localStorageEvent.n;
+            cell = row.insertCell();
+            cell.textContent = localStorageEvent.time;
+            cell = row.insertCell();
+            cell.textContent = localStorageEvent.event;
+        }
+        table.style.display = 'block';
+    });
 }
 
 function setCircles(){
@@ -134,36 +158,52 @@ function animateCircles(){
 function logEvent(event){
     eventNum++;
     message_div.textContent = event;
+
+    const now = new Date();
+    const formattedTime = now.getHours() + ':' + now.getMinutes() + ':' +
+                          now.getSeconds() + ':' + now.getMilliseconds();
+    localStorage.setItem(eventNum.toString(), formattedTime + ';' + event);
+
     const xhr = new XMLHttpRequest();
     xhr.open('POST', 'php/saveEvent.php', true);
     xhr.setRequestHeader('Content-type', 'application/x-www-form-urlencoded');
     xhr.send('n='+eventNum+'&event='+event);
-
 }
 
 function loadEventsFromServer(){
-    let eventsArray = [];
-    const xhr = new XMLHttpRequest();
-    xhr.onreadystatechange = function() {
-        if (xhr.readyState === XMLHttpRequest.DONE) {
-            if (xhr.status === 200) {
-                let strArr = xhr.responseText.trim().split('\n');
-
-                console.log(xhr.responseText);
-                console.log(strArr);
-
-                strArr.forEach(str => {
-                    const eventProperties = str.split(';');
-                    eventsArray.push({ n:eventProperties[0],
-                                       time:eventProperties[1],
-                                       event:eventProperties[2]});
-                });
-                console.log(eventsArray);
-            } else {
-                console.error('Request failed with status: ' + xhr.status);
+    return new Promise(function (resolve, reject){
+        let eventsArray = [];
+        const xhr = new XMLHttpRequest();
+        xhr.onreadystatechange = function() {
+            if (xhr.readyState === XMLHttpRequest.DONE) {
+                if (xhr.status === 200) {
+                    let strArr = xhr.responseText.trim().split('\n');
+                    strArr.forEach(str => {
+                        const eventProperties = str.split(';');
+                        eventsArray.push({ n:eventProperties[0],
+                            time:eventProperties[1],
+                            event:eventProperties[2]});
+                    });
+                    resolve(eventsArray);
+                } else {
+                    reject('Request failed with status: ' + xhr.status);
+                }
             }
-        }
+        };
+        xhr.open('GET', 'php/getAllEvents.php', true);
+        xhr.send();
+    });
+}
+
+function loadEventsFromLocalStorage(){
+    let eventsArray = [];
+    const keys = Object.keys(localStorage);
+    for (let i = 0; i < keys.length; i++){
+        const value = localStorage.getItem(keys[i]);
+        const valueArr = value.split(';');
+        eventsArray.push({ n: keys[i].toString(),
+                           time: valueArr[0],
+                           event: valueArr[1]});
     }
-    xhr.open('GET', 'php/getAllEvents.php', true);
-    xhr.send();
+    return eventsArray;
 }
